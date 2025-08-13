@@ -1,0 +1,12 @@
+# ignore inputs
+inputs
+
+# ignore outputs
+output
+
+# ignore secrets
+secrets
+
+dev_app_secrets.yml
+prd_app_secrets.yml
+prd_db_secrets.yml
