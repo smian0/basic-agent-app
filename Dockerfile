@@ -10,11 +10,19 @@ RUN groupadd -g 61000 ${USER} \
 
 WORKDIR ${APP_DIR}
 
+# Install git and openssh-client for private repo access
+RUN apt-get update && apt-get install -y git openssh-client && rm -rf /var/lib/apt/lists/*
+
+# Add GitHub to known hosts to avoid host key verification issues
+RUN mkdir -p ~/.ssh && \
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+
 # Copy requirements.txt
 COPY requirements.txt ./
 
-# Install requirements
-RUN uv pip sync requirements.txt --system
+# Install requirements with SSH mount for private repo
+# The --mount=type=ssh allows Docker to use SSH keys from the host
+RUN --mount=type=ssh uv pip sync requirements.txt --system
 
 # Copy project files
 COPY . .

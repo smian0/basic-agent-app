@@ -1,3 +1,8 @@
+# Apply agno-ck metadata patch before any agno imports
+import sys
+sys.path.insert(0, '/app')
+import agno_patch
+
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 

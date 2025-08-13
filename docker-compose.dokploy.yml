@@ -1,0 +1,46 @@
+# Dokploy-specific Docker Compose configuration
+# This file is optimized for Dokploy deployment platform
+# Use this instead of docker-compose.prod.yml when deploying to Dokploy
+
+services:
+  db:
+    environment:
+      # Use strong passwords in production
+      POSTGRES_PASSWORD: ${DB_PASS}
+    restart: unless-stopped
+    # Dokploy handles networking internally
+    
+  api:
+    # No build needed - Dokploy builds from Dockerfile
+    command: uvicorn api.main:app --workers 2 --host 0.0.0.0 --port 8000
+    environment:
+      RUNTIME_ENV: prd
+      DEBUG: "false"
+      LOG_LEVEL: info
+    restart: unless-stopped
+    labels:
+      # Dokploy auto-SSL and routing for API
+      - "dokploy.enabled=true"
+      - "dokploy.domain=api.${DOMAIN}"
+      - "dokploy.port=8000"
+      - "dokploy.ssl=true"
+      - "dokploy.ssl.email=${SSL_EMAIL}"
+
+  ui:
+    command: streamlit run ui/Home.py --server.port 8501 --server.address 0.0.0.0 --server.headless true
+    environment:
+      RUNTIME_ENV: prd
+      DEBUG: "false"
+      LOG_LEVEL: info
+    restart: unless-stopped
+    labels:
+      # Dokploy auto-SSL and routing for UI
+      - "dokploy.enabled=true"
+      - "dokploy.domain=${DOMAIN}"
+      - "dokploy.port=8501"
+      - "dokploy.ssl=true"
+      - "dokploy.ssl.email=${SSL_EMAIL}"
+
+volumes:
+  postgres_data:
+    # Dokploy manages volume persistence

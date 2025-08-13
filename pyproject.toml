@@ -1,12 +1,12 @@
 [project]
-name = "agent-app"
+name = "basic-agent-app"
 version = "0.1.0"
 requires-python = ">=3.11"
 readme = "README.md"
 authors = [{ name = "Agno", email = "hello@agno.com" }]
 
 dependencies = [
-  "agno[aws]==1.5.5",
+  "agno-ck[aws,mcp,arize] @ git+ssh://git@github.com/smian0/agno-ck.git@develop#subdirectory=libs/agno",
   "alembic",
   "beautifulsoup4",
   "duckduckgo-search",

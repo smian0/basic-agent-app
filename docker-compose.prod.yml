@@ -1,0 +1,49 @@
+# Production-like environment for local testing
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+# 
+# This is for LOCAL TESTING of production settings, NOT for actual cloud deployment.
+# For real production, use:
+# - AWS ECS: ag ws up prd
+# - Kubernetes: Use Helm charts
+# - Cloud Run: Use cloud-specific configs
+
+services:
+  db:
+    # Production uses external database (RDS, Cloud SQL, etc.)
+    # This is just for local testing
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  api:
+    # Use pre-built image instead of building
+    image: ${DOCKER_IMAGE:-basic-agent-app}:${TAG:-latest}
+    # Production command with multiple workers
+    command: uvicorn api.main:app --workers 4 --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      RUNTIME_ENV: prd
+      DEBUG: "false"
+      LOG_LEVEL: info
+    # No volume mounts in production (use image)
+    restart: unless-stopped
+
+  ui:
+    # Use pre-built image instead of building
+    image: ${DOCKER_IMAGE:-basic-agent-app}:${TAG:-latest}
+    command: streamlit run ui/Home.py --server.port 8501 --server.address 0.0.0.0 --server.headless true
+    ports:
+      - "8501:8501"
+    environment:
+      RUNTIME_ENV: prd
+      DEBUG: "false"
+      LOG_LEVEL: info
+    # No volume mounts in production (use image)
+    restart: unless-stopped
+
+volumes:
+  postgres_prod_data:
+    name: agent-app-postgres-prod-data
