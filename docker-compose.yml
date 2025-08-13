@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with pgvector extension
+  db:
+    image: agnohq/pgvector:16
+    container_name: agent-app-db
+    environment:
+      POSTGRES_USER: ai
+      POSTGRES_PASSWORD: ai
+      POSTGRES_DB: ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - agent-app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent-app-api
+    command: uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      RUNTIME_ENV: dev
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      EXA_API_KEY: ${EXA_API_KEY}
+      AGNO_MONITOR: "true"
+      AGNO_API_KEY: ${AGNO_API_KEY}
+      GITHUB_REPO: ${GITHUB_REPO:-smian0/basic-agent-app}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ai
+      DB_PASS: ai
+      DB_DATABASE: ai
+      WAIT_FOR_DB: "true"
+      MIGRATE_DB: "true"
+      PYTHONPATH: /app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - agent-app
+
+  # Streamlit UI
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent-app-ui
+    command: streamlit run ui/Home.py --server.port 8501 --server.address 0.0.0.0 --server.headless true
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    environment:
+      RUNTIME_ENV: dev
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      EXA_API_KEY: ${EXA_API_KEY}
+      AGNO_MONITOR: "true"
+      AGNO_API_KEY: ${AGNO_API_KEY}
+      GITHUB_REPO: ${GITHUB_REPO:-smian0/basic-agent-app}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ai
+      DB_PASS: ai
+      DB_DATABASE: ai
+      WAIT_FOR_DB: "true"
+      MIGRATE_DB: "false"  # Only API should migrate
+      PYTHONPATH: /app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - agent-app
+
+networks:
+  agent-app:
+    name: agent-app
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: agent-app-postgres-data
