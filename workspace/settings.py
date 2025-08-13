@@ -12,6 +12,8 @@ ws_settings = WorkspaceSettings(
     ws_name="agent-app",
     # Path to the workspace root
     ws_root=Path(__file__).parent.parent.resolve(),
+    # GitHub repository
+    github_repo="smian0/basic-agent-app",
     # -*- Workspace Environments
     dev_env="dev",
     prd_env="prd",
