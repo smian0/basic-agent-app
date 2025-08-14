@@ -1,0 +1,44 @@
+FROM agnohq/python:3.12
+
+# Create app user with specific UID/GID for consistency
+RUN groupadd -g 61000 app \
+  && useradd -g 61000 -u 61000 -ms /bin/bash -d /app app
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y git openssh-client && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file first (for better caching)
+COPY requirements.txt ./
+
+# Accept GitHub token as build argument
+ARG GITHUB_TOKEN
+
+# Create a temporary requirements file with token substitution
+RUN if [ -n "$GITHUB_TOKEN" ]; then \
+      echo "GitHub token provided, updating requirements.txt..." && \
+      sed "s|git+ssh://git@github.com/|git+https://${GITHUB_TOKEN}@github.com/|g" requirements.txt > requirements-temp.txt && \
+      mv requirements-temp.txt requirements.txt; \
+    else \
+      echo "No GitHub token provided, using requirements.txt as-is"; \
+    fi
+
+# Install Python requirements
+RUN uv pip sync requirements.txt --system
+
+# Copy project files
+COPY . .
+
+# Change ownership to app user
+RUN chown -R app:app /app
+
+# Switch to app user for security
+USER app
+
+# Set Python path
+ENV PYTHONPATH=/app
+
+# The actual command will be overridden by docker-compose.yml
+CMD ["echo", "Please specify a command in docker-compose.yml"]

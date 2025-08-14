@@ -1,46 +1,99 @@
-# Dokploy-specific Docker Compose configuration
-# This file is optimized for Dokploy deployment platform
-# Use this instead of docker-compose.prod.yml when deploying to Dokploy
+# Docker Compose configuration for Dokploy deployment
+# This version uses Dockerfile.dokploy which handles GitHub token authentication
 
 services:
+  # PostgreSQL with pgvector extension
   db:
+    image: agnohq/pgvector:16
+    container_name: agent-app-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     environment:
-      # Use strong passwords in production
-      POSTGRES_PASSWORD: ${DB_PASS}
-    restart: unless-stopped
-    # Dokploy handles networking internally
-    
-  api:
-    # No build needed - Dokploy builds from Dockerfile
-    command: uvicorn api.main:app --workers 2 --host 0.0.0.0 --port 8000
-    environment:
-      RUNTIME_ENV: prd
-      DEBUG: "false"
-      LOG_LEVEL: info
-    restart: unless-stopped
-    labels:
-      # Dokploy auto-SSL and routing for API
-      - "dokploy.enabled=true"
-      - "dokploy.domain=api.${DOMAIN}"
-      - "dokploy.port=8000"
-      - "dokploy.ssl=true"
-      - "dokploy.ssl.email=${SSL_EMAIL}"
+      POSTGRES_USER: ${DB_USER:-ai}
+      POSTGRES_PASSWORD: ${DB_PASS:-ai}
+      POSTGRES_DB: ${DB_DATABASE:-ai}
+    networks:
+      - agent-app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-ai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  ui:
-    command: streamlit run ui/Home.py --server.port 8501 --server.address 0.0.0.0 --server.headless true
+  # FastAPI Backend
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dokploy
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+    container_name: agent-app-api
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
     environment:
-      RUNTIME_ENV: prd
-      DEBUG: "false"
-      LOG_LEVEL: info
-    restart: unless-stopped
-    labels:
-      # Dokploy auto-SSL and routing for UI
-      - "dokploy.enabled=true"
-      - "dokploy.domain=${DOMAIN}"
-      - "dokploy.port=8501"
-      - "dokploy.ssl=true"
-      - "dokploy.ssl.email=${SSL_EMAIL}"
+      RUNTIME_ENV: ${RUNTIME_ENV:-dev}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      EXA_API_KEY: ${EXA_API_KEY}
+      OLLAMA_TURBO_API_KEY: ${OLLAMA_TURBO_API_KEY}
+      AGNO_MONITOR: ${AGNO_MONITOR:-true}
+      AGNO_API_KEY: ${AGNO_API_KEY}
+      GITHUB_REPO: ${GITHUB_REPO:-smian0/basic-agent-app}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-ai}
+      DB_PASS: ${DB_PASS:-ai}
+      DB_DATABASE: ${DB_DATABASE:-ai}
+      WAIT_FOR_DB: "true"
+      MIGRATE_DB: "true"
+      PYTHONPATH: /app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - agent-app
+
+  # Streamlit UI
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.dokploy
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+    container_name: agent-app-ui
+    command: streamlit run ui/Home.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      RUNTIME_ENV: ${RUNTIME_ENV:-dev}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      EXA_API_KEY: ${EXA_API_KEY}
+      OLLAMA_TURBO_API_KEY: ${OLLAMA_TURBO_API_KEY}
+      AGNO_MONITOR: ${AGNO_MONITOR:-true}
+      AGNO_API_KEY: ${AGNO_API_KEY}
+      GITHUB_REPO: ${GITHUB_REPO:-smian0/basic-agent-app}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-ai}
+      DB_PASS: ${DB_PASS:-ai}
+      DB_DATABASE: ${DB_DATABASE:-ai}
+      WAIT_FOR_DB: "true"
+      MIGRATE_DB: "false"  # Only API should migrate
+      PYTHONPATH: /app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - agent-app
+
+networks:
+  agent-app:
+    name: agent-app
+    driver: bridge
 
 volumes:
   postgres_data:
-    # Dokploy manages volume persistence
