@@ -1,10 +1,5 @@
-# Apply agno-ck metadata patch before any agno imports
-import sys
-sys.path.insert(0, '/app')
-try:
-    import agno_patch
-except ImportError:
-    pass  # Patch may not be needed in all environments
+# Apply agno-ck metadata fix before any agno imports
+import agno_metadata_fix
 
 import asyncio
 

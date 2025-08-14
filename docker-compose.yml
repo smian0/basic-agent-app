@@ -7,6 +7,10 @@ services:
   db:
     image: agnohq/pgvector:16
     container_name: agent-app-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${DB_USER:-ai}
       POSTGRES_PASSWORD: ${DB_PASS:-ai}
@@ -24,9 +28,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: agent-app-api
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
     environment:
       RUNTIME_ENV: ${RUNTIME_ENV:-dev}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
       EXA_API_KEY: ${EXA_API_KEY}
       OLLAMA_TURBO_API_KEY: ${OLLAMA_TURBO_API_KEY}
       AGNO_MONITOR: ${AGNO_MONITOR:-true}
@@ -51,9 +60,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: agent-app-ui
+    command: streamlit run ui/Home.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
     environment:
       RUNTIME_ENV: ${RUNTIME_ENV:-dev}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
       EXA_API_KEY: ${EXA_API_KEY}
       OLLAMA_TURBO_API_KEY: ${OLLAMA_TURBO_API_KEY}
       AGNO_MONITOR: ${AGNO_MONITOR:-true}
@@ -77,3 +91,6 @@ networks:
   agent-app:
     name: agent-app
     driver: bridge
+
+volumes:
+  postgres_data:
