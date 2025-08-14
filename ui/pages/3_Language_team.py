@@ -54,10 +54,10 @@ async def body() -> None:
     if (
         team_name not in st.session_state
         or st.session_state[team_name]["team"] is None
-        or st.session_state.get("selected_model") != model_id
     ):
         logger.info("---*--- Creating Team ---*---")
-        team = get_multi_language_team(user_id=user_id, model_id=model_id)
+        # Always use the default Kimi model for teams
+        team = get_multi_language_team(user_id=user_id, model_id=None)
         st.session_state[team_name]["team"] = team
         st.session_state["selected_model"] = model_id
     else:

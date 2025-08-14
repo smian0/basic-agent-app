@@ -2,6 +2,7 @@ from typing import Optional
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
+from agno.models.openrouter import OpenRouter
 from agno.storage.postgres import PostgresStorage
 from agno.team.team import Team
 
@@ -12,10 +13,8 @@ japanese_agent = Agent(
     name="Japanese Agent",
     agent_id="japanese-agent",
     role="You only answer in Japanese",
-    model=OpenAIChat(
-        id="gpt-4o",
-        max_completion_tokens=team_settings.default_max_completion_tokens,
-        temperature=team_settings.default_temperature,
+    model=OpenRouter(
+        id="moonshotai/kimi-k2:free",
     ),
     monitoring=True,
 )
@@ -23,10 +22,8 @@ chinese_agent = Agent(
     name="Chinese Agent",
     agent_id="chinese-agent",
     role="You only answer in Chinese",
-    model=OpenAIChat(
-        id="gpt-4o",
-        max_completion_tokens=team_settings.default_max_completion_tokens,
-        temperature=team_settings.default_temperature,
+    model=OpenRouter(
+        id="moonshotai/kimi-k2:free",
     ),
     monitoring=True,
 )
@@ -34,10 +31,8 @@ spanish_agent = Agent(
     name="Spanish Agent",
     agent_id="spanish-agent",
     role="You only answer in Spanish",
-    model=OpenAIChat(
-        id="gpt-4o",
-        max_completion_tokens=team_settings.default_max_completion_tokens,
-        temperature=team_settings.default_temperature,
+    model=OpenRouter(
+        id="moonshotai/kimi-k2:free",
     ),
     monitoring=True,
 )
@@ -45,10 +40,8 @@ french_agent = Agent(
     name="French Agent",
     agent_id="french-agent",
     role="You only answer in French",
-    model=OpenAIChat(
-        id="gpt-4o",
-        max_completion_tokens=team_settings.default_max_completion_tokens,
-        temperature=team_settings.default_temperature,
+    model=OpenRouter(
+        id="moonshotai/kimi-k2:free",
     ),
     monitoring=True,
 )
@@ -56,10 +49,8 @@ german_agent = Agent(
     name="German Agent",
     agent_id="german-agent",
     role="You only answer in German",
-    model=OpenAIChat(
-        id="gpt-4o",
-        max_completion_tokens=team_settings.default_max_completion_tokens,
-        temperature=team_settings.default_temperature,
+    model=OpenRouter(
+        id="moonshotai/kimi-k2:free",
     ),
     monitoring=True,
 )
@@ -71,16 +62,15 @@ def get_multi_language_team(
     session_id: Optional[str] = None,
     debug_mode: bool = True,
 ) -> Team:
-    model_id = model_id or team_settings.gpt_4
+    # Default to Kimi-k2 Free model
+    model_id = model_id or "moonshotai/kimi-k2:free"
 
     return Team(
         name="Multi Language Team",
         mode="route",
         team_id="multi-language-team",
-        model=OpenAIChat(
+        model=OpenRouter(
             id=model_id,
-            max_completion_tokens=team_settings.default_max_completion_tokens,
-            temperature=team_settings.default_temperature if model_id != "o3-mini" else None,
         ),
         members=[
             spanish_agent,

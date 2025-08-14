@@ -4,6 +4,7 @@ from typing import Dict, Iterator, Optional
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
+from agno.models.openrouter import OpenRouter
 from agno.storage.postgres import PostgresStorage
 from agno.tools.duckduckgo import DuckDuckGoTools
 from agno.tools.newspaper4k import Newspaper4kTools
@@ -48,7 +49,7 @@ class BlogPostGenerator(Workflow):
 
     # Search Agent: Handles intelligent web searching and source gathering
     searcher: Agent = Agent(
-        model=OpenAIChat(id=workflow_settings.gpt_4_mini),
+        model=OpenRouter(id="moonshotai/kimi-k2:free"),
         tools=[DuckDuckGoTools()],
         description=dedent("""\
         You are BlogResearch-X, an elite research assistant specializing in discovering
@@ -75,12 +76,12 @@ class BlogPostGenerator(Workflow):
            - Find supporting data and statistics\
         """),
         response_model=SearchResults,
-        structured_outputs=True,
+        structured_outputs=False,
     )
 
     # Content Scraper: Extracts and processes article content
     article_scraper: Agent = Agent(
-        model=OpenAIChat(id=workflow_settings.gpt_4_mini),
+        model=OpenRouter(id="moonshotai/kimi-k2:free"),
         tools=[Newspaper4kTools()],
         description=dedent("""\
         You are ContentBot-X, a specialist in extracting and processing digital content
@@ -108,12 +109,12 @@ class BlogPostGenerator(Workflow):
            - Maintain readability\
         """),
         response_model=ScrapedArticle,
-        structured_outputs=True,
+        structured_outputs=False,
     )
 
     # Content Writer Agent: Crafts engaging blog posts from research
     writer: Agent = Agent(
-        model=OpenAIChat(id=workflow_settings.gpt_4_mini),
+        model=OpenRouter(id="moonshotai/kimi-k2:free"),
         description=dedent("""\
         You are BlogMaster-X, an elite content creator combining journalistic excellence
         with digital marketing expertise. Your strengths include:

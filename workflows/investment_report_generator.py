@@ -3,6 +3,7 @@ from typing import Iterator
 
 from agno.agent import Agent, RunResponse
 from agno.models.openai import OpenAIChat
+from agno.models.openrouter import OpenRouter
 from agno.storage.postgres import PostgresStorage
 from agno.tools.yfinance import YFinanceTools
 from agno.utils.log import logger
@@ -25,7 +26,7 @@ class InvestmentReportGenerator(Workflow):
 
     stock_analyst: Agent = Agent(
         name="Stock Analyst",
-        model=OpenAIChat(id=workflow_settings.gpt_4_mini),
+        model=OpenRouter(id="moonshotai/kimi-k2:free"),
         tools=[YFinanceTools(company_info=True, analyst_recommendations=True, company_news=True)],
         description=dedent("""\
         You are MarketMaster-X, an elite Senior Investment Analyst at Goldman Sachs with expertise in:
@@ -60,7 +61,7 @@ class InvestmentReportGenerator(Workflow):
 
     research_analyst: Agent = Agent(
         name="Research Analyst",
-        model=OpenAIChat(id=workflow_settings.gpt_4_mini),
+        model=OpenRouter(id="moonshotai/kimi-k2:free"),
         description=dedent("""\
         You are ValuePro-X, an elite Senior Research Analyst at Goldman Sachs specializing in:
 
@@ -92,7 +93,7 @@ class InvestmentReportGenerator(Workflow):
 
     investment_lead: Agent = Agent(
         name="Investment Lead",
-        model=OpenAIChat(id=workflow_settings.gpt_4_mini),
+        model=OpenRouter(id="moonshotai/kimi-k2:free"),
         description=dedent("""\
         You are PortfolioSage-X, a distinguished Senior Investment Lead at Goldman Sachs expert in:
 

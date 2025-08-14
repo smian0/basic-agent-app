@@ -3,6 +3,7 @@ from typing import Optional
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
+from agno.models.openrouter import OpenRouter
 from agno.storage.postgres import PostgresStorage
 from agno.team.team import Team
 from agno.tools.duckduckgo import DuckDuckGoTools
@@ -15,10 +16,8 @@ finance_agent = Agent(
     name="Finance Agent",
     role="Analyze financial data",
     agent_id="finance-agent",
-    model=OpenAIChat(
-        id=team_settings.gpt_4,
-        max_completion_tokens=team_settings.default_max_completion_tokens,
-        temperature=team_settings.default_temperature,
+    model=OpenRouter(
+        id="moonshotai/kimi-k2:free",
     ),
     tools=[YFinanceTools(enable_all=True, cache_results=True)],
     instructions=dedent("""\
@@ -65,10 +64,8 @@ finance_agent = Agent(
 web_agent = Agent(
     name="Web Agent",
     role="Search the web for information",
-    model=OpenAIChat(
-        id=team_settings.gpt_4,
-        max_completion_tokens=team_settings.default_max_completion_tokens,
-        temperature=team_settings.default_temperature,
+    model=OpenRouter(
+        id="moonshotai/kimi-k2:free",
     ),
     tools=[DuckDuckGoTools(cache_results=True)],
     agent_id="web-agent",
@@ -88,7 +85,8 @@ def get_finance_researcher_team(
     session_id: Optional[str] = None,
     debug_mode: bool = True,
 ):
-    model_id = model_id or team_settings.gpt_4
+    # Default to Kimi-k2 Free model
+    model_id = model_id or "moonshotai/kimi-k2:free"
 
     return Team(
         name="Finance Researcher Team",
@@ -101,10 +99,8 @@ def get_finance_researcher_team(
         session_id=session_id,
         user_id=user_id,
         description="You are a team of finance researchers!",
-        model=OpenAIChat(
+        model=OpenRouter(
             id=model_id,
-            max_completion_tokens=team_settings.default_max_completion_tokens,
-            temperature=team_settings.default_temperature if model_id != "o3-mini" else None,
         ),
         success_criteria="A good financial research report.",
         enable_agentic_context=True,
