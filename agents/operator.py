@@ -3,11 +3,13 @@ from typing import List, Optional
 
 from agents.sage import get_sage
 from agents.scholar import get_scholar
+from agents.assistant import get_assistant
 
 
 class AgentType(Enum):
     SAGE = "sage"
     SCHOLAR = "scholar"
+    ASSISTANT = "assistant"
 
 
 def get_available_agents() -> List[str]:
@@ -24,5 +26,7 @@ def get_agent(
 ):
     if agent_id == AgentType.SAGE:
         return get_sage(model_id=model_id, user_id=user_id, session_id=session_id, debug_mode=debug_mode)
+    elif agent_id == AgentType.ASSISTANT:
+        return get_assistant(model_id=model_id, user_id=user_id, session_id=session_id, debug_mode=debug_mode)
     else:
         return get_scholar(model_id=model_id, user_id=user_id, session_id=session_id, debug_mode=debug_mode)

@@ -4,7 +4,7 @@
 import asyncio
 import os
 from agno.agent import Agent
-from agno.models.ollama import QwenOllama
+from agno.models.ollama import Ollama
 from ollama import AsyncClient as OllamaAsyncClient
 
 
@@ -15,7 +15,7 @@ async def test_120b():
         raise ValueError("OLLAMA_TURBO_API_KEY environment variable not set")
     
     agent = Agent(
-        model=QwenOllama(
+        model=Ollama(
             # id="qwen3:30b",
             # async_client=OllamaAsyncClient(
             #     host="https://mb-metadata-doctors-helen.trycloudflare.com",

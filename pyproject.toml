@@ -13,6 +13,7 @@ dependencies = [
   "exa_py",
   "fastapi[standard]",
   "nest_asyncio",
+  "ollama",
   "openai",
   "pgvector",
   "psycopg[binary]",

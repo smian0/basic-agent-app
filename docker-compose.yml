@@ -28,6 +28,7 @@ services:
       RUNTIME_ENV: ${RUNTIME_ENV:-dev}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       EXA_API_KEY: ${EXA_API_KEY}
+      OLLAMA_TURBO_API_KEY: ${OLLAMA_TURBO_API_KEY}
       AGNO_MONITOR: ${AGNO_MONITOR:-true}
       AGNO_API_KEY: ${AGNO_API_KEY}
       GITHUB_REPO: ${GITHUB_REPO:-smian0/basic-agent-app}
@@ -54,6 +55,7 @@ services:
       RUNTIME_ENV: ${RUNTIME_ENV:-dev}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       EXA_API_KEY: ${EXA_API_KEY}
+      OLLAMA_TURBO_API_KEY: ${OLLAMA_TURBO_API_KEY}
       AGNO_MONITOR: ${AGNO_MONITOR:-true}
       AGNO_API_KEY: ${AGNO_API_KEY}
       GITHUB_REPO: ${GITHUB_REPO:-smian0/basic-agent-app}
