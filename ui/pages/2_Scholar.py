@@ -60,7 +60,9 @@ async def body() -> None:
         or st.session_state.get("selected_model") != model_id
     ):
         logger.info("---*--- Creating Scholar agent ---*---")
-        scholar = get_scholar(user_id=user_id, model_id=model_id)
+        # Preserve the existing session_id if we have one
+        existing_session_id = st.session_state.get(agent_name, {}).get("session_id")
+        scholar = get_scholar(user_id=user_id, model_id=model_id, session_id=existing_session_id)
         st.session_state[agent_name]["agent"] = scholar
         st.session_state["selected_model"] = model_id
     else:

@@ -1,3 +1,6 @@
+# Apply agno-ck metadata fix before any agno imports
+import agno_metadata_fix
+
 import json
 from textwrap import dedent
 from typing import Dict, Iterator, Optional
@@ -73,10 +76,21 @@ class BlogPostGenerator(Workflow):
         3. Diversity of Perspectives 🌐
            - Include different viewpoints
            - Gather both mainstream and expert opinions
-           - Find supporting data and statistics\
+           - Find supporting data and statistics
+        
+        IMPORTANT: Return your response as a JSON object with this format:
+        {
+            "articles": [
+                {
+                    "title": "Article Title",
+                    "url": "https://example.com/article",
+                    "summary": "Brief summary of the article"
+                }
+            ]
+        }\
         """),
-        response_model=SearchResults,
-        structured_outputs=False,
+        # response_model not supported with Kimi-k2
+        # structured_outputs=False,
     )
 
     # Content Scraper: Extracts and processes article content
@@ -106,10 +120,18 @@ class BlogPostGenerator(Workflow):
         3. Quality Control ✅
            - Verify content relevance
            - Ensure accurate extraction
-           - Maintain readability\
+           - Maintain readability
+        
+        IMPORTANT: Return your response as a JSON object with this format:
+        {
+            "title": "Article Title",
+            "url": "Article URL",
+            "summary": "Brief summary",
+            "content": "Full article content in markdown format"
+        }\
         """),
-        response_model=ScrapedArticle,
-        structured_outputs=False,
+        # response_model not supported with Kimi-k2
+        # structured_outputs=False,
     )
 
     # Content Writer Agent: Crafts engaging blog posts from research
@@ -189,7 +211,7 @@ class BlogPostGenerator(Workflow):
         if use_cached_report:
             cached_blog_post = self.get_cached_blog_post(topic)
             if cached_blog_post:
-                yield RunResponse(content=cached_blog_post, event=RunEvent.workflow_completed)
+                yield RunResponse(content=cached_blog_post)
                 return
 
         # Search the web for articles on the topic
@@ -197,7 +219,6 @@ class BlogPostGenerator(Workflow):
         # If no search_results are found for the topic, end the workflow
         if search_results is None or len(search_results.articles) == 0:
             yield RunResponse(
-                event=RunEvent.workflow_completed,
                 content=f"Sorry, could not find any articles on the topic: {topic}",
             )
             return
@@ -272,18 +293,39 @@ class BlogPostGenerator(Workflow):
         for attempt in range(num_attempts):
             try:
                 searcher_response: RunResponse = self.searcher.run(topic)
-                if (
-                    searcher_response is not None
-                    and searcher_response.content is not None
-                    and isinstance(searcher_response.content, SearchResults)
-                ):
-                    article_count = len(searcher_response.content.articles)
+                if searcher_response is not None and searcher_response.content is not None:
+                    # Try to parse the response as SearchResults
+                    if isinstance(searcher_response.content, SearchResults):
+                        search_results = searcher_response.content
+                    elif isinstance(searcher_response.content, str):
+                        # Try to parse JSON string response
+                        try:
+                            import re
+                            # Extract JSON from the response if it's embedded in text
+                            json_match = re.search(r'\{.*\}', searcher_response.content, re.DOTALL)
+                            if json_match:
+                                json_str = json_match.group()
+                                data = json.loads(json_str)
+                                search_results = SearchResults.model_validate(data)
+                            else:
+                                # If no JSON found, create a simple response
+                                logger.warning("No JSON found in response, creating empty results")
+                                search_results = SearchResults(articles=[])
+                        except (json.JSONDecodeError, Exception) as e:
+                            logger.warning(f"Failed to parse JSON response: {e}")
+                            # Create empty results as fallback
+                            search_results = SearchResults(articles=[])
+                    else:
+                        logger.warning(f"Unexpected response type: {type(searcher_response.content)}")
+                        search_results = SearchResults(articles=[])
+                    
+                    article_count = len(search_results.articles)
                     logger.info(f"Found {article_count} articles on attempt {attempt + 1}")
                     # Cache the search results
-                    self.add_search_results_to_cache(topic, searcher_response.content)
-                    return searcher_response.content
+                    self.add_search_results_to_cache(topic, search_results)
+                    return search_results
                 else:
-                    logger.warning(f"Attempt {attempt + 1}/{num_attempts} failed: Invalid response type")
+                    logger.warning(f"Attempt {attempt + 1}/{num_attempts} failed: No response")
             except Exception as e:
                 logger.warning(f"Attempt {attempt + 1}/{num_attempts} failed: {str(e)}")
 
@@ -313,13 +355,48 @@ class BlogPostGenerator(Workflow):
                 continue
 
             article_scraper_response: RunResponse = self.article_scraper.run(article.url)
-            if (
-                article_scraper_response is not None
-                and article_scraper_response.content is not None
-                and isinstance(article_scraper_response.content, ScrapedArticle)
-            ):
-                scraped_articles[article_scraper_response.content.url] = article_scraper_response.content
-                logger.info(f"Scraped article: {article_scraper_response.content.url}")
+            if article_scraper_response is not None and article_scraper_response.content is not None:
+                # Try to parse the response as ScrapedArticle
+                if isinstance(article_scraper_response.content, ScrapedArticle):
+                    scraped_article = article_scraper_response.content
+                elif isinstance(article_scraper_response.content, str):
+                    # Try to parse JSON string response
+                    try:
+                        import re
+                        # Extract JSON from the response if it's embedded in text
+                        json_match = re.search(r'\{.*\}', article_scraper_response.content, re.DOTALL)
+                        if json_match:
+                            json_str = json_match.group()
+                            data = json.loads(json_str)
+                            scraped_article = ScrapedArticle.model_validate(data)
+                        else:
+                            # If no JSON found, create a simple response
+                            logger.warning(f"No JSON found for article: {article.url}")
+                            scraped_article = ScrapedArticle(
+                                title=article.title,
+                                url=article.url,
+                                summary=article.summary,
+                                content=None
+                            )
+                    except (json.JSONDecodeError, Exception) as e:
+                        logger.warning(f"Failed to parse scraped article JSON: {e}")
+                        scraped_article = ScrapedArticle(
+                            title=article.title,
+                            url=article.url,
+                            summary=article.summary,
+                            content=None
+                        )
+                else:
+                    logger.warning(f"Unexpected scraper response type: {type(article_scraper_response.content)}")
+                    scraped_article = ScrapedArticle(
+                        title=article.title,
+                        url=article.url,
+                        summary=article.summary,
+                        content=None
+                    )
+                
+                scraped_articles[scraped_article.url] = scraped_article
+                logger.info(f"Scraped article: {scraped_article.url}")
 
         # Save the scraped articles in the session state
         self.add_scraped_articles_to_cache(topic, scraped_articles)

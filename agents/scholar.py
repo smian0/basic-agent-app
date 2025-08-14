@@ -22,14 +22,15 @@ def get_scholar(
         additional_context += f"You are interacting with the user: {user_id}"
         additional_context += "</context>"
 
-    # Use Kimi-k2 Free as the default model
+    # Use Kimi-k2 Free as the default model, or the specified model
+    model_id = model_id or "moonshotai/kimi-k2:free"
     return Agent(
         name="Scholar",
         agent_id="scholar",
         user_id=user_id,
         session_id=session_id,
         model=OpenRouter(
-            id="moonshotai/kimi-k2:free",
+            id=model_id,
         ),
         # Tools available to the agent
         tools=[DuckDuckGoTools()],

@@ -1,3 +1,6 @@
+# Apply agno-ck metadata fix before any agno imports
+import agno_metadata_fix
+
 from textwrap import dedent
 from typing import Iterator
 
@@ -54,7 +57,9 @@ class InvestmentReportGenerator(Workflow):
            - Assess company-specific challenges
            - Consider macroeconomic factors
            - Identify potential red flags
-        Note: This analysis is for educational purposes only.\
+        Note: This analysis is for educational purposes only.
+        
+        IMPORTANT: Provide your analysis as a comprehensive market analysis report in markdown format.\
         """),
         expected_output="Comprehensive market analysis report in markdown format",
     )
@@ -86,7 +91,9 @@ class InvestmentReportGenerator(Workflow):
            - Rank based on investment potential
            - Provide detailed rationale
            - Consider risk-adjusted returns
-           - Explain competitive advantages\
+           - Explain competitive advantages
+        
+        IMPORTANT: Provide your analysis as a detailed investment analysis and ranking report in markdown format.\
         """),
         expected_output="Detailed investment analysis and ranking report in markdown format",
     )
@@ -118,8 +125,12 @@ class InvestmentReportGenerator(Workflow):
            - Present clear allocations
            - Explain investment thesis
            - Provide actionable insights
-           - Include risk considerations\
+           - Include risk considerations
+        
+        IMPORTANT: Provide your recommendations as a comprehensive investment proposal in markdown format.\
         """),
+        expected_output="Comprehensive investment proposal in markdown format",
+        markdown=True,
     )
 
     def run(self, companies: str) -> Iterator[RunResponse]:  # type: ignore
@@ -127,7 +138,6 @@ class InvestmentReportGenerator(Workflow):
         initial_report: RunResponse = self.stock_analyst.run(companies)
         if initial_report is None or not initial_report.content:
             yield RunResponse(
-                run_id=self.run_id,
                 content="Sorry, could not get the stock analyst report.",
             )
             return
@@ -135,7 +145,7 @@ class InvestmentReportGenerator(Workflow):
         logger.info("Ranking companies based on investment potential.")
         ranked_companies: RunResponse = self.research_analyst.run(initial_report.content)
         if ranked_companies is None or not ranked_companies.content:
-            yield RunResponse(run_id=self.run_id, content="Sorry, could not get the ranked companies.")
+            yield RunResponse(content="Sorry, could not get the ranked companies.")
             return
 
         logger.info("Reviewing the research report and producing an investment proposal.")

@@ -61,7 +61,9 @@ async def body() -> None:
         or st.session_state.get("selected_model") != model_id
     ):
         logger.info("---*--- Creating Sage Agent ---*---")
-        sage = get_sage(user_id=user_id, model_id=model_id)
+        # Preserve the existing session_id if we have one
+        existing_session_id = st.session_state.get(agent_name, {}).get("session_id")
+        sage = get_sage(user_id=user_id, model_id=model_id, session_id=existing_session_id)
         st.session_state[agent_name]["agent"] = sage
         st.session_state["selected_model"] = model_id
     else:

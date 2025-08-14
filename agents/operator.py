@@ -26,10 +26,10 @@ def get_agent(
 ):
     if agent_id == AgentType.SAGE:
         # Sage uses Kimi-k2 Free with tools
-        return get_sage(user_id=user_id, session_id=session_id, debug_mode=debug_mode)
+        return get_sage(model_id=model_id, user_id=user_id, session_id=session_id, debug_mode=debug_mode)
     elif agent_id == AgentType.ASSISTANT:
         # Assistant uses GPT-OSS:120B without tools
         return get_assistant(model_id=model_id, user_id=user_id, session_id=session_id, debug_mode=debug_mode)
     else:
         # Default to Scholar (Kimi-k2 Free with tools)
-        return get_scholar(user_id=user_id, session_id=session_id, debug_mode=debug_mode)
+        return get_scholar(model_id=model_id, user_id=user_id, session_id=session_id, debug_mode=debug_mode)
