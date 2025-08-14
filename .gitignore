@@ -72,3 +72,4 @@ dmypy.json
 # Ruff
 .ruff_cache/
 .streamlit/machine_id_v4
+.cache/py-yfinance/

@@ -2,7 +2,7 @@ from textwrap import dedent
 from typing import Optional
 
 from agno.agent import Agent, AgentKnowledge
-from agno.models.openai import OpenAIChat
+from agno.models.openrouter import OpenRouter
 from agno.storage.agent.postgres import PostgresAgentStorage
 from agno.tools.duckduckgo import DuckDuckGoTools
 from agno.vectordb.pgvector import PgVector, SearchType
@@ -23,17 +23,14 @@ def get_sage(
         additional_context += f"You are interacting with the user: {user_id}"
         additional_context += "</context>"
 
-    model_id = model_id or agent_settings.gpt_4_mini
-
+    # Use Kimi-k2 Free as the default model
     return Agent(
         name="Sage",
         agent_id="sage",
         user_id=user_id,
         session_id=session_id,
-        model=OpenAIChat(
-            id=model_id,
-            max_completion_tokens=agent_settings.default_max_completion_tokens,
-            temperature=agent_settings.default_temperature if model_id != "o3-mini" else None,
+        model=OpenRouter(
+            id="moonshotai/kimi-k2:free",
         ),
         # Tools available to the agent
         tools=[DuckDuckGoTools()],

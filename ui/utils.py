@@ -43,8 +43,8 @@ async def initialize_workflow_session_state(workflow_name: str):
 async def selected_model() -> str:
     """Display a model selector in the sidebar."""
     model_options = {
-        "gpt-4o": "gpt-4o",
-        "o3-mini": "o3-mini",
+        "Kimi-k2 Free (Default)": "moonshotai/kimi-k2:free",
+        "GPT-4o-mini": "gpt-4o-mini",
     }
     selected_model = st.sidebar.selectbox(
         "Choose a model",
